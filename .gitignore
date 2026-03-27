@@ -1,0 +1,22 @@
+# API Keys and Config
+config.py
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Data and outputs
+youtube_analysis_data/
+*.html
+
+# Backups
+*.backup
+*.backup2
+*.bak
+*.OLD
+*.broken
+
+# OS files
+.DS_Store
