@@ -148,3 +148,6 @@ if __name__ == '__main__':
     print("="*70)
     print("\nOpen: http://localhost:8080\n")
     app.run(host='0.0.0.0', port=8080, debug=False)
+
+# Vercel entry point
+application = app
