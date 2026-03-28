@@ -138,21 +138,24 @@ body {
     if 'questions' in analyses:
         qa = analyses['questions']
         
-        # Dynamic conclusion
-        if qa['multiplier'] > 5:
-            conclusion = "the best videos asked WAY more questions than the worst ones."
-            impact = "which is fkn massive"
-        elif qa['multiplier'] > 2:
-            conclusion = "top performers asked significantly more questions."
-            impact = "which is substantial"
-        elif qa['multiplier'] > 1.3:
-            conclusion = "question usage shows a moderate correlation with performance."
-            impact = "which is noticeable"
-        else:
-            conclusion = "question usage has minimal impact on performance."
-            impact = "which suggests other factors matter more"
-        
-        html += f"""
+        # Only show if there's a meaningful difference
+        if qa['multiplier'] > 1.2:  # At least 20% difference
+            
+            # Dynamic conclusion
+            if qa['multiplier'] > 5:
+                conclusion = "the best videos asked WAY more questions than the worst ones."
+                impact = "which is fkn massive"
+            elif qa['multiplier'] > 2:
+                conclusion = "top performers asked significantly more questions."
+                impact = "which is substantial"
+            elif qa['multiplier'] > 1.3:
+                conclusion = "question usage shows a moderate correlation with performance."
+                impact = "which is noticeable"
+            else:
+                conclusion = "question usage has minimal impact on performance."
+                impact = "which suggests other factors matter more"
+            
+            html += f"""
 <div class="card">
     <div class="insight-num">INSIGHT {insight_num}</div>
     <div class="insight-title">{conclusion}</div>
@@ -168,21 +171,27 @@ body {
         </div>
     </div>
 </div>"""
-        insight_num += 1
+            insight_num += 1
+        else:
+            # Skip this insight if multiplier is too low
+            insight_num += 1
     
     # INSIGHT 3: Title Structure
     if 'title_structure' in analyses:
         ts = analyses['title_structure']
         
-        # Dynamic conclusion based on percentages
-        if ts['name_frame_pct'] > 70:
-            conclusion = "the winning title was a 2-part sentence, not a topic dump."
-        elif ts['name_frame_pct'] > 40:
-            conclusion = "structured titles with clear framing perform better."
-        else:
-            conclusion = "title structure shows varied patterns - no dominant format."
-        
-        html += f"""
+        # Only show if patterns exist
+        if ts['colon_pct'] > 10:  # At least 10% use structure
+            
+            # Dynamic conclusion based on percentages
+            if ts['name_frame_pct'] > 70:
+                conclusion = "the winning title was a 2-part sentence, not a topic dump."
+            elif ts['name_frame_pct'] > 40:
+                conclusion = "structured titles with clear framing perform better."
+            else:
+                conclusion = "title structure shows varied patterns - no dominant format."
+            
+            html += f"""
 <div class="card">
     <div class="insight-num">INSIGHT {insight_num}</div>
     <div class="insight-title">{conclusion}</div>
@@ -198,7 +207,10 @@ body {
         </div>
     </div>
 </div>"""
-        insight_num += 1
+            insight_num += 1
+        else:
+            # Skip if no patterns
+            insight_num += 1
     
     # INSIGHT 4: Title Length
     if 'title_length' in analyses:
