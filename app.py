@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify, send_file
 from flask_cors import CORS
 import threading
 import time
-import config
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -27,7 +27,7 @@ def run_analysis(task_id, channel):
         
         task.progress = 10
         task.message = "Initializing..."
-        analyzer = CleanAnalyzer(config.YOUTUBE_API_KEY, config.OPENAI_API_KEY, config.MODEL)
+        analyzer = CleanAnalyzer(os.environ.get("YOUTUBE_API_KEY"), config.OPENAI_API_KEY, config.MODEL)
         
         task.progress = 20
         task.message = f"Finding {channel}..."
