@@ -27,7 +27,7 @@ def run_analysis(task_id, channel):
         
         task.progress = 10
         task.message = "Initializing..."
-        analyzer = CleanAnalyzer(os.environ.get("YOUTUBE_API_KEY"), config.OPENAI_API_KEY, config.MODEL)
+        analyzer = CleanAnalyzer(os.environ.get("YOUTUBE_API_KEY"), os.environ.get('YOUTUBE_API_KEY'), config.MODEL)
         
         task.progress = 20
         task.message = f"Finding {channel}..."
