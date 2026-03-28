@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>YouTube Analyzer</title>
+</head>
+<body style="font-family:Arial;max-width:600px;margin-left:auto;margin-right:auto;margin-top:50px;padding:20px;">
+<h1>YouTube Analyzer</h1>
+<input type="text" id="ch" placeholder="Channel name" style="width:100%;padding:10px;margin-bottom:10px;">
+<button onclick="go()" style="width:100%;padding:10px;background:blue;color:white;border:none;cursor:pointer;">Analyze</button>
+<p id="msg"></p>
+<script>
+var tid=null;
+function go(){
+var ch=document.getElementById('ch').value;
+document.getElementById('msg').innerHTML='Starting...';
+fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({channel:ch,video_types:['shorts','regular','podcasts']})}).then(function(r){return r.json();}).then(function(d){tid=d.task_id;check();});
+}
+function check(){
+fetch('/api/progress/'+tid).then(function(r){return r.json();}).then(function(d){
+document.getElementById('msg').innerHTML=d.message+' ('+d.progress+'%)';
+if(d.status==='complete'){
+window.open('/api/report/'+d.result.html_file.split('/').pop(),'_blank');
+document.getElementById('msg').innerHTML='Done! Report opened.';
+}else if(d.status==='error'){
+document.getElementById('msg').innerHTML='Error: '+d.error;
+}else{
+setTimeout(check,1000);
+}
+});
+}
+</script>
+</body>
+</html>
