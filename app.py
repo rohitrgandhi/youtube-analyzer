@@ -27,7 +27,8 @@ def run_analysis(task_id, channel):
         
         task.progress = 10
         task.message = "Initializing..."
-        analyzer = CleanAnalyzer(os.environ.get("YOUTUBE_API_KEY"), os.environ.get('YOUTUBE_API_KEY'), config.MODEL)
+        # FIXED: Using model name directly instead of config.MODEL
+        analyzer = CleanAnalyzer(os.environ.get("YOUTUBE_API_KEY"), os.environ.get('YOUTUBE_API_KEY'), "gpt-4o-mini")
         
         task.progress = 20
         task.message = f"Finding {channel}..."
