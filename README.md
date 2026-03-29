@@ -77,9 +77,6 @@ The tool analyzes:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📝 License
-
-MIT License - feel free to use for personal or commercial projects!
 
 ## ⚠️ API Quota
 
@@ -89,8 +86,7 @@ YouTube Data API has a quota of 10,000 units/day:
 
 ## 🙏 Credits
 
-Created by [Your Name]
-
+Created by Rohit Gandhi
 Inspired by data-driven YouTube analysis methodologies.
 
 ---
