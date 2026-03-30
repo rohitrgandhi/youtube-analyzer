@@ -15,19 +15,7 @@ class YouTubeAnalyzer:
         handle = channel_handle.replace('@', '')
         
         try:
-            # Try as handle
-            request = self.youtube.channels().list(part='id', forHandle=handle)
-            response = request.execute()
-            if response.get('items'):
-                return response['items'][0]['id']
-            
-            # Try as username
-            request = self.youtube.channels().list(part='id', forUsername=handle)
-            response = request.execute()
-            if response.get('items'):
-                return response['items'][0]['id']
-            
-            # Try search
+            # Try search first - this is the most reliable method
             request = self.youtube.search().list(
                 part='snippet',
                 q=channel_handle,
@@ -35,8 +23,31 @@ class YouTubeAnalyzer:
                 maxResults=1
             )
             response = request.execute()
+            
             if response.get('items'):
                 return response['items'][0]['snippet']['channelId']
+            
+            # Try without @ symbol
+            request = self.youtube.search().list(
+                part='snippet',
+                q=handle,
+                type='channel',
+                maxResults=1
+            )
+            response = request.execute()
+            
+            if response.get('items'):
+                return response['items'][0]['snippet']['channelId']
+            
+            # Try as username (old method)
+            request = self.youtube.channels().list(
+                part='id',
+                forUsername=handle
+            )
+            response = request.execute()
+            
+            if response.get('items'):
+                return response['items'][0]['id']
             
             return None
         except Exception as e:
