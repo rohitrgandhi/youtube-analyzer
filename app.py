@@ -21,45 +21,49 @@ class Task:
 def run_analysis(task_id, channel):
     task = tasks[task_id]
     try:
-        # Import here to avoid circular imports
         from clean_analyzer import CleanAnalyzer
         from clean_report import generate_clean_report
         
-        # DEBUG: Check if API keys exist
+        # Get API keys
         youtube_key = os.environ.get("YOUTUBE_API_KEY")
         openai_key = os.environ.get("OPENAI_API_KEY")
         
-        print(f"\n=== DEBUG INFO ===")
+        # Debug logging
+        print(f"\n{'='*50}")
+        print(f"DEBUG: Starting analysis for {channel}")
         print(f"YouTube API Key exists: {youtube_key is not None}")
         print(f"OpenAI API Key exists: {openai_key is not None}")
-        print(f"Channel: {channel}")
-        print(f"==================\n")
+        print(f"{'='*50}\n")
         
         if not youtube_key:
             task.status = "error"
-            task.error = "YouTube API key not configured"
+            task.error = "YouTube API key not configured on server"
+            print("ERROR: YouTube API key missing!")
             return
             
         if not openai_key:
             task.status = "error"
-            task.error = "OpenAI API key not configured"
+            task.error = "OpenAI API key not configured on server"
+            print("ERROR: OpenAI API key missing!")
             return
         
         task.progress = 10
-        task.message = "Initializing..."
-        analyzer = CleanAnalyzer(
-            youtube_key, 
-            openai_key,
-            "gpt-4o-mini"
-        )
+        task.message = "Initializing analyzer..."
+        
+        analyzer = CleanAnalyzer(youtube_key, openai_key, "gpt-4o-mini")
+        print(f"✓ Analyzer initialized successfully")
         
         task.progress = 20
-        task.message = f"Finding {channel}..."
+        task.message = f"Finding channel {channel}..."
         channel_id = analyzer.get_channel_id(channel)
+        
         if not channel_id:
             task.status = "error"
-            task.error = "Channel not found"
+            task.error = "Channel not found. Please check the channel name."
+            print(f"ERROR: Could not find channel: {channel}")
             return
+        
+        print(f"✓ Found channel ID: {channel_id}")
         
         task.progress = 30
         task.message = "Fetching videos..."
@@ -69,6 +73,8 @@ def run_analysis(task_id, channel):
             task.status = "error"
             task.error = f"Only {len(videos)} videos found. Need at least 10 for analysis."
             return
+        
+        print(f"✓ Fetched {len(videos)} videos")
         
         task.progress = 40
         task.message = "Processing videos..."
@@ -117,6 +123,8 @@ def run_analysis(task_id, channel):
         
         html_file = generate_clean_report(categorized, analyses)
         
+        print(f"✓ Analysis complete! Report: {html_file}")
+        
         task.status = "complete"
         task.progress = 100
         task.result = {
@@ -127,10 +135,14 @@ def run_analysis(task_id, channel):
                 'videos': len(categorized['videos'])
             }
         }
+        
     except Exception as e:
         task.status = "error"
         task.error = str(e)
-        print(f"Error: {e}")
+        print(f"\n{'!'*50}")
+        print(f"ERROR in analysis:")
+        print(f"{e}")
+        print(f"{'!'*50}\n")
         import traceback
         traceback.print_exc()
 
@@ -173,5 +185,4 @@ if __name__ == '__main__':
     print("\nOpen: http://localhost:8080\n")
     app.run(host='0.0.0.0', port=8080, debug=False)
 
-# Vercel entry point
 application = app

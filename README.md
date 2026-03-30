@@ -1,94 +1,78 @@
-# 📊 YouTube Channel Analyzer
+# YouTube Analyzer - Fixed Version
 
-A data-driven YouTube analytics tool that provides 7 actionable insights based on real YouTube API data.
+## 📋 Files You Need
 
-![YouTube Analyzer](https://img.shields.io/badge/Python-3.9+-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+Replace these files in your GitHub repository:
 
-## ✨ Features
+1. **app.py** - Main application
+2. **requirements.txt** - Python dependencies  
+3. **templates/index.html** - Web interface
 
-Analyzes any YouTube channel and generates a beautiful report with:
+## 🔑 Environment Variables on Render
 
-1. **Performance Gap** - Top 20% vs bottom 20% comparison
-2. **Title Length Analysis** - Optimal character/word count
-3. **Title Patterns** - What works (questions, colons, numbers)
-4. **Duration Sweet Spot** - Best video length (with min sample size)
-5. **Engagement Metrics** - Like rate, comment rate analysis
-6. **Best Performing Day** - When to post for maximum views
-7. **Most Consistent Day** - Your posting patterns
-8. **Top Keywords** - Words that drive performance
+Make sure you have BOTH of these set in Render → Environment:
 
-## 🎯 Why This Tool?
+1. `YOUTUBE_API_KEY` = Your YouTube Data API v3 key
+2. `OPENAI_API_KEY` = Your OpenAI API key (starts with sk-)
 
-- ✅ **Data-driven** - Based on actual YouTube API data
-- ✅ **Statistically valid** - Minimum sample size requirements
-- ✅ **Beautiful reports** - Clean, professional HTML output
-- ✅ **Fast** - Analyzes 200 videos in ~15 seconds
-- ✅ **No BS** - No transcript analysis, no AI guessing
+## 🚀 Deployment Steps
 
-## 🚀 Quick Start
+### Step 1: Replace Files in Your Project
 
-### 1. Prerequisites
+Copy these files from this fixed version to your local youtube-analyzer folder:
+- Replace `app.py`
+- Replace `requirements.txt`
+- Replace `templates/index.html`
 
-- Python 3.9+
-- YouTube Data API v3 key ([get one here](https://console.cloud.google.com/apis/credentials))
+### Step 2: Make Sure You Have These Files
 
-### 2. Installation
+Your project should have:
+- app.py ✅
+- requirements.txt ✅
+- templates/index.html ✅
+- clean_analyzer.py ✅ (keep your existing one)
+- clean_report.py ✅ (keep your existing one)
+- youtube_analyzer_openai.py ✅ (keep your existing one)
+
+### Step 3: Push to GitHub
+
 ```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/youtube-analyzer.git
-cd youtube-analyzer
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy config example and add your API key
-cp config.example.py config.py
-# Edit config.py and add your YouTube API key
+git add .
+git commit -m "Fix all deployment issues"
+git push
 ```
 
-### 3. Run
-```bash
-python3 app.py
+### Step 4: Check Render Logs
+
+After deployment, the logs should show:
+```
+==================================================
+DEBUG: Starting analysis for @channelname
+YouTube API Key exists: True
+OpenAI API Key exists: True
+==================================================
 ```
 
-Then open `http://localhost:8080` in your browser!
+If you see `False` for either key, that key is missing on Render!
 
-## 📸 Screenshots
+## 🐛 Troubleshooting
 
-[Add screenshots here]
+**Error: "Channel not found"**
+- Check that BOTH API keys are set in Render environment variables
+- Look at Render logs for the DEBUG output
+- Make sure you're using the correct channel handle (with or without @)
 
-## 🛠️ Tech Stack
+**Error: "YouTube API key not configured"**
+- Add YOUTUBE_API_KEY to Render environment variables
 
-- **Backend**: Flask (Python)
-- **YouTube API**: Google API Client
-- **Frontend**: Pure HTML/CSS/JavaScript
-- **Analysis**: Pure Python (no ML/AI required)
+**Error: "OpenAI API key not configured"**  
+- Add OPENAI_API_KEY to Render environment variables
 
-## 📊 Sample Analysis
+## 📞 Support
 
-The tool analyzes:
-- Up to 200 most recent videos
-- Separates Shorts (≤60s) from Videos (>60s)
-- Calculates views per day, engagement rates
-- Identifies patterns in titles, publishing, duration
+If you still have issues, check the Render logs and look for:
+1. The DEBUG output showing which keys exist
+2. Any Python errors or stack traces
+3. The specific error message
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-
-## ⚠️ API Quota
-
-YouTube Data API has a quota of 10,000 units/day:
-- Analyzing 200 videos uses ~203 units
-- You can analyze ~50 channels per day
-
-## 🙏 Credits
-
-Created by Rohit Gandhi
-Inspired by data-driven YouTube analysis methodologies.
-
----
-
-**⭐ Star this repo if you found it useful!**
+The debug logging will tell you EXACTLY what's wrong!
