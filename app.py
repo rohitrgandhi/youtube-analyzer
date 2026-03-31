@@ -43,15 +43,15 @@ def run_analysis(task_id, channel):
         
         # Step 2: Import modules
         print("📦 Importing modules...", flush=True)
-        from youtube_analyzer import YouTubeAnalyzer
-        from report_generator import generate_report
+        from advanced_youtube_analyzer import AdvancedYouTubeAnalyzer
+        from advanced_report_generator import generate_report
         print("✓ Modules imported", flush=True)
         
         # Step 3: Initialize analyzer
         task.progress = 10
         task.message = "Initializing..."
         print("🔧 Creating analyzer...", flush=True)
-        analyzer = YouTubeAnalyzer(youtube_key, openai_key)
+        analyzer = AdvancedYouTubeAnalyzer(youtube_key, openai_key)
         print("✓ Analyzer ready", flush=True)
         
         # Step 4: Find channel
@@ -132,13 +132,9 @@ def analyze():
     task_id = f"{channel}_{int(time.time())}"
     tasks[task_id] = Task(task_id)
     
-    print(f"\n>>> Creating task for {channel} (ID: {task_id})", flush=True)
-    
     thread = threading.Thread(target=run_analysis, args=(task_id, channel))
     thread.daemon = True
     thread.start()
-    
-    print(f">>> Thread started", flush=True)
     
     return jsonify({'task_id': task_id})
 
@@ -159,22 +155,6 @@ def get_progress(task_id):
 @app.route('/api/report/<path:filename>')
 def serve_report(filename):
     return send_file(f'reports/{filename}')
-
-@app.route('/test/keys')
-def test_keys():
-    """Test endpoint to check if API keys exist"""
-    youtube_key = os.environ.get("YOUTUBE_API_KEY")
-    openai_key = os.environ.get("OPENAI_API_KEY")
-    
-    return jsonify({
-        'status': 'ok',
-        'youtube_key_exists': youtube_key is not None,
-        'youtube_key_length': len(youtube_key) if youtube_key else 0,
-        'openai_key_exists': openai_key is not None,
-        'openai_key_length': len(openai_key) if openai_key else 0,
-        'youtube_starts_with_AIza': youtube_key.startswith('AIza') if youtube_key else False,
-        'openai_starts_with_sk': openai_key.startswith('sk-') if openai_key else False
-    })
 
 if __name__ == '__main__':
     print("\n" + "="*70)
