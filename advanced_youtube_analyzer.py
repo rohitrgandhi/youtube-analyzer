@@ -296,8 +296,14 @@ class AdvancedYouTubeAnalyzer:
                     'count': len(vpd_list)
                 }
         
-        # Find sweet spot
-        sweet_spot = max(bucket_stats.items(), key=lambda x: x[1]['avg_views_per_day'])
+        # Find sweet spot (requires at least 5 videos for statistical significance)
+        significant_buckets = {k: v for k, v in bucket_stats.items() if v['count'] >= 5}
+        
+        if significant_buckets:
+            sweet_spot = max(significant_buckets.items(), key=lambda x: x[1]['avg_views_per_day'])
+        else:
+            # Fallback to any bucket if none have 5+ videos
+            sweet_spot = max(bucket_stats.items(), key=lambda x: x[1]['avg_views_per_day'])
         
         return {
             'buckets': bucket_stats,
