@@ -398,7 +398,7 @@ def generate_report(videos, insights, channel_name):
                     </div>
                     <div class="stat-box">
                         <div class="stat-value">{insights['publishing_insights']['best_hour']}</div>
-                        <div class="stat-label">Best Time to Publish</div>
+                        <div class="stat-label">Best Time to Publish ({insights['publishing_insights']['timezone']})</div>
                     </div>
                 </div>
             </div>
