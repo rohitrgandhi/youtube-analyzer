@@ -69,7 +69,8 @@ class AdvancedYouTubeAnalyzer:
         ).execute()
         
         # Extract country for timezone detection
-        self.channel_country = channel_response['items'][0]['snippet'].get('country', 'US')
+        # Default to 'IN' (India) instead of 'US' for better global coverage
+        self.channel_country = channel_response['items'][0]['snippet'].get('country', 'IN')
         
         playlist_id = channel_response['items'][0]['contentDetails']['relatedPlaylists']['uploads']
         
@@ -270,63 +271,49 @@ class AdvancedYouTubeAnalyzer:
         return f"{length_insight}. {structure_insight}."
     
     def _analyze_duration(self, videos):
-        """Smart duration bucket analysis - separates Shorts from Videos"""
+        """Smart duration bucket analysis - shows Shorts separately"""
         # Separate Shorts (< 1 min) from Videos (>= 1 min)
         shorts = [v for v in videos if v['duration_minutes'] < 1]
         videos_only = [v for v in videos if v['duration_minutes'] >= 1]
         
-        # Analyze only if we have enough long-form videos
-        if len(videos_only) >= 20:
-            buckets = {
-                'Short (1-5min)': [],
-                'Medium (5-15min)': [],
-                'Standard (15-30min)': [],
-                'Long (30-60min)': [],
-                'Extended (60+ min)': []
-            }
-            
-            for v in videos_only:
-                dur = v['duration_minutes']
-                vpd = v['views_per_day']
-                
-                if dur < 5:
-                    buckets['Short (1-5min)'].append(vpd)
-                elif dur < 15:
-                    buckets['Medium (5-15min)'].append(vpd)
-                elif dur < 30:
-                    buckets['Standard (15-30min)'].append(vpd)
-                elif dur < 60:
-                    buckets['Long (30-60min)'].append(vpd)
-                else:
-                    buckets['Extended (60+ min)'].append(vpd)
-        else:
-            # Fallback: include shorts in analysis
-            buckets = {
-                'Shorts (<1min)': [],
-                'Short (1-5min)': [],
-                'Medium (5-15min)': [],
-                'Standard (15-30min)': [],
-                'Long (30-60min)': [],
-                'Extended (60+ min)': []
-            }
-            
-            for v in videos:
-                dur = v['duration_minutes']
-                vpd = v['views_per_day']
-                
-                if dur < 1:
-                    buckets['Shorts (<1min)'].append(vpd)
-                elif dur < 5:
-                    buckets['Short (1-5min)'].append(vpd)
-                elif dur < 15:
-                    buckets['Medium (5-15min)'].append(vpd)
-                elif dur < 30:
-                    buckets['Standard (15-30min)'].append(vpd)
-                elif dur < 60:
-                    buckets['Long (30-60min)'].append(vpd)
-                else:
-                    buckets['Extended (60+ min)'].append(vpd)
+        # Always include shorts bucket if there are any
+        buckets = {}
         
+        # Add Shorts bucket if exists
+        if shorts:
+            shorts_vpd = [v['views_per_day'] for v in shorts]
+            buckets['Shorts (<1min)'] = shorts_vpd
+        
+        # Add video buckets
+        video_buckets = {
+            'Short (1-5min)': [],
+            'Medium (5-15min)': [],
+            'Standard (15-30min)': [],
+            'Long (30-60min)': [],
+            'Extended (60+ min)': []
+        }
+        
+        for v in videos_only:
+            dur = v['duration_minutes']
+            vpd = v['views_per_day']
+            
+            if dur < 5:
+                video_buckets['Short (1-5min)'].append(vpd)
+            elif dur < 15:
+                video_buckets['Medium (5-15min)'].append(vpd)
+            elif dur < 30:
+                video_buckets['Standard (15-30min)'].append(vpd)
+            elif dur < 60:
+                video_buckets['Long (30-60min)'].append(vpd)
+            else:
+                video_buckets['Extended (60+ min)'].append(vpd)
+        
+        # Merge video buckets with shorts
+        for name, vpd_list in video_buckets.items():
+            if vpd_list:
+                buckets[name] = vpd_list
+        
+        # Calculate stats for all buckets
         bucket_stats = {}
         for name, vpd_list in buckets.items():
             if vpd_list:
@@ -335,35 +322,35 @@ class AdvancedYouTubeAnalyzer:
                     'count': len(vpd_list)
                 }
         
-        # Smart sweet spot selection - requires minimum 10 videos
-        significant_buckets = {k: v for k, v in bucket_stats.items() if v['count'] >= 10}
+        # Smart sweet spot selection - EXCLUDE shorts from sweet spot
+        # Only consider video buckets (>= 1 min) for sweet spot
+        video_only_buckets = {k: v for k, v in bucket_stats.items() if 'Shorts' not in k}
+        
+        # Require minimum 10 videos
+        significant_buckets = {k: v for k, v in video_only_buckets.items() if v['count'] >= 10}
         
         if significant_buckets:
             sweet_spot = max(significant_buckets.items(), key=lambda x: x[1]['avg_views_per_day'])
         else:
             # Require at least 5 videos
-            significant_buckets = {k: v for k, v in bucket_stats.items() if v['count'] >= 5}
+            significant_buckets = {k: v for k, v in video_only_buckets.items() if v['count'] >= 5}
             if significant_buckets:
                 sweet_spot = max(significant_buckets.items(), key=lambda x: x[1]['avg_views_per_day'])
             else:
-                # Fallback to highest performing bucket
-                sweet_spot = max(bucket_stats.items(), key=lambda x: x[1]['avg_views_per_day'])
-        
-        # Add shorts stats separately
-        shorts_stats = None
-        if shorts:
-            shorts_avg = int(statistics.mean([v['views_per_day'] for v in shorts]))
-            shorts_stats = {
-                'avg_views_per_day': shorts_avg,
-                'count': len(shorts)
-            }
+                # Fallback to any video bucket (still excluding shorts)
+                if video_only_buckets:
+                    sweet_spot = max(video_only_buckets.items(), key=lambda x: x[1]['avg_views_per_day'])
+                else:
+                    # No videos, only shorts - pick shorts as fallback
+                    sweet_spot = max(bucket_stats.items(), key=lambda x: x[1]['avg_views_per_day'])
         
         return {
             'buckets': bucket_stats,
             'sweet_spot': sweet_spot[0],
             'sweet_spot_avg': sweet_spot[1]['avg_views_per_day'],
             'sweet_spot_count': sweet_spot[1]['count'],
-            'shorts_stats': shorts_stats,
+            'has_shorts': len(shorts) > 0,
+            'shorts_count': len(shorts),
             'insight': f"{sweet_spot[0]} is the sweet spot with {sweet_spot[1]['avg_views_per_day']:,} views/day avg ({sweet_spot[1]['count']} videos)"
         }
     
@@ -446,7 +433,7 @@ class AdvancedYouTubeAnalyzer:
         } for i, v in enumerate(top_10)]
     
     def _analyze_content_patterns(self, top_20, all_videos):
-        """Analyze content patterns from titles"""
+        """Analyze content patterns from titles - find meaningful topics"""
         # Extensive stop words list
         stop_words = {
             'this', 'that', 'with', 'from', 'have', 'been', 'were', 'will',
@@ -475,8 +462,7 @@ class AdvancedYouTubeAnalyzer:
             'place', 'rather', 'second', 'should', 'another', 'because', 'however',
             'nothing', 'several', 'something', 'together', 'without', 'important',
             'india', 'indian', 'shorts', 'motivation', 'inspiration', 'exposed',
-            'मोटिवेशन', 'this', 'that', 'what', 'when', 'where', 'which',
-            'shamani', 'memes'
+            'मोटिवेशन', 'shamani'
         }
         
         # Extract words from top performers
@@ -488,11 +474,50 @@ class AdvancedYouTubeAnalyzer:
             meaningful_words = [w for w in words if w not in stop_words]
             top_words.extend(meaningful_words)
         
-        # Get most common meaningful words
-        common_words = Counter(top_words).most_common(15)
+        # Get word frequencies
+        word_counts = Counter(top_words)
         
-        # Filter to get truly meaningful keywords (appear 2+ times)
-        meaningful_keywords = [word for word, count in common_words if count >= 2][:5]
+        # Deduplicate similar words (plurals, verb forms)
+        # Group: react/reacts, study/studies, case/cases, etc.
+        deduped_counts = {}
+        processed = set()
+        
+        for word, count in word_counts.items():
+            if word in processed:
+                continue
+            
+            # Find root word
+            root = word.rstrip('s').rstrip('e').rstrip('d').rstrip('ing')
+            if len(root) < 3:
+                root = word  # Don't over-trim short words
+            
+            # Aggregate similar words
+            similar_total = count
+            similar_words = [word]
+            
+            for other_word, other_count in word_counts.items():
+                if other_word == word or other_word in processed:
+                    continue
+                
+                # Check if similar (same root or one is subset of other)
+                other_root = other_word.rstrip('s').rstrip('e').rstrip('d').rstrip('ing')
+                
+                if root == other_root or word in other_word or other_word in word:
+                    similar_total += other_count
+                    similar_words.append(other_word)
+                    processed.add(other_word)
+            
+            # Use the shortest/cleanest form as the key
+            best_form = min(similar_words, key=len)
+            deduped_counts[best_form] = similar_total
+            processed.add(word)
+        
+        # Get most common meaningful words (appear 2+ times)
+        common_words = [(word, count) for word, count in deduped_counts.items() if count >= 2]
+        common_words = sorted(common_words, key=lambda x: x[1], reverse=True)[:5]
+        
+        # Extract keywords
+        meaningful_keywords = [word for word, count in common_words]
         
         if meaningful_keywords:
             insight_text = f"Top performing videos often mention: {', '.join(meaningful_keywords[:3])}"
