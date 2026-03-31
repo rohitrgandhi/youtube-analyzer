@@ -72,7 +72,7 @@ def run_analysis(task_id, channel):
         task.progress = 30
         task.message = "Fetching videos..."
         print("📹 Fetching videos...", flush=True)
-        videos = analyzer.get_videos(channel_id, max_results=100)
+        videos = analyzer.get_videos(channel_id, max_results=300)
         print(f"✓ Fetched {len(videos)} videos", flush=True)
         
         if len(videos) < 10:
